@@ -23,6 +23,7 @@ class mnist_reader(object):
 			magic, num, rows, cols = struct.unpack('>IIII', f.read(2**4))
 			imgs = np.fromfile(fname, dtype=np.uint8)[2**4:]
 			imgs = imgs.reshape(num, rows*cols)
+			imgs = np.divide(imgs, 255.0)
 		return imgs
 	
 	def pack(self, imgs, labels):

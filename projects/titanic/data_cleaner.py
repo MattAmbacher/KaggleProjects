@@ -10,7 +10,6 @@ from matplotlib import pyplot as plt
 # I might take ~200 training examples to use as a cross validation set, will revisit
 train = pd.read_csv('../../DataSets/TitanicIntro/train.csv')
 test = pd.read_csv('../../DataSets/TitanicIntro/test.csv')
-
 '''
 The scrubbing plan:
     Variables not used for prediction purposes:
@@ -32,6 +31,31 @@ The scrubbing plan:
         Ticket Number. Is the number ordered or related too the layout of the ship or ticket class or order sold?
                        It's a number, sometimes there's letters though. I don't know what they mean.
 
+    SPECIAL CASES
+    -------------------------------------------------------------------------------------
+    Two of the training data have NaN in their Embarked field. Makes sense to use the Passenger class and
+    fare as estimators of where they would have embarked from.
+    
+    Conveniently, both training examples missing Embarking ports have the same Pclass and paid the same fare.
+        Pclass: 1
+        Fare: $80.00
+
+    That seems to coincide with embarking from Charleston or whatever the C stands for (median price of
+    1st class ticket is around $76.00
+
+    One of the test examples is missing a Fare. This should be easy enough to fix. Take median price
+    of embarking port and Pclass.
+
+    Our example has:
+        Pclass: 3
+        Embarked: Southampton
+
+    Actually quite a few  of outliers nort of 1.5 IQR. Still going to give him the median and see how it works
+    He gets $8.00 fare
+
+    By the way, we can see this by calling the helper function visualize_fare_embark(DataFrame df)
+
+-------------------------------------------------------------------------------------
 All titles (taken from Name field)                              Value Mapped To
 ---------------------------------------------------------------------------------------
                                                            |       
@@ -49,14 +73,8 @@ PassengerId | Survived | Pclass | Name | Sex | Age | SibSpouse | ParChild | Tick
 '''
 
 #--------------------------
-# Collect survival indicator
-y = train['PassengerId'][:-200]
-yc = train['PassengerId'][-200:]
-ytest = test['PassengerId']
 
-#--------------------------
-
-train = train[['Pclass', 'Name', 'Sex', 'Age', 'SibSp', 'Parch', 'Fare', 'Cabin', 'Embarked']]
+train = train[['Pclass', 'Name', 'Sex', 'Age', 'SibSp', 'Parch', 'Fare', 'Cabin', 'Embarked', 'Survived']]
 test = test[['Pclass', 'Name', 'Sex', 'Age', 'SibSp', 'Parch', 'Fare', 'Cabin', 'Embarked']]
 
 '''
@@ -90,6 +108,11 @@ def generate_age_CDF(data):
                 continue
             cdf[t] += 1/n * (x <= min(data)+ t)
     return cdf
+def find_nan_in_df(df):
+    '''
+    Useful for seeing any missing data if it's a few pesky isolated values
+    '''
+    return df[df.isnull().T.any().T]
 
 def generate_age_sample(cdf):
     r = np.random.uniform()
@@ -117,15 +140,17 @@ def plot_ages(df):
     plt.hist(ages)
     plt.show()
 
-
 def normalize(df):
-    normalizable_columns = ['Age', 'Fare']
-    for c in normalizable_columns:
+    
+    for c in ['Fare', 'Age']:
         x = df[c]
         mu = df[c].mean()
         range = df[c].max() - df[c].min()
         df[c] = (x - mu)/range
     return df
+
+def visualize_fare_embark(df):
+    df.boxplot(['Fare'], by=['Embarked', 'Pclass'])
 '''
 -----------------------------------------------------------------------
 '''
@@ -166,7 +191,7 @@ def replace_name(x):
     name = (m.group())[2:] #throw away comma in regex 
 
     military = ['Col', 'Capt', 'Major']
-    nobility = ['Don', 'Dona', 'Sir', 'the', 'Jonkheer']
+    nobility = ['Don', 'Dona', 'Sir', 'the', 'Lady', 'Jonkheer']
     educated = ['Dr', 'Rev']
     married = ['Mr', 'Mrs', 'Mme']
     unmarried = ['Master', 'Mlle', 'Miss', 'Ms']
@@ -203,6 +228,10 @@ def replace_age(x, cdf):
 -----------------------------------------------------------------------
 '''
 
+#Visualize Fare vs Embarked, Pclass
+visualize_fare_embark(test)
+#Uncomment the next line to see 
+#plt.show()
 
 #--------------------------------------------------
 #Clean up the data
@@ -220,15 +249,32 @@ test['Embarked'] = test.apply(replace_embark, axis=1)
 test['Age'] = test.apply((lambda x: replace_age(x, cdf)), axis=1)
 
 
+#Manually clean the NaNs like I talked about in the comments
+#Would automate this but there's only 3 examples that need to be dealt with
+train.set_value(61, 'Embarked', 0)
+train.set_value(829, 'Embarked', 0)
+
+test.set_value(152,'Fare', 8.00)
+
+#Let's just make sure the NaNs got cleaned...
+training_nans = find_nan_in_df(train)
+test_nans = find_nan_in_df(test)
+
+print('NaN\'s in training set...')
+print(training_nans)
+print('-'*20)
+print('NaN\'s in test set...')
+print(test_nans)
+
+
 #Normalize data
 train = normalize(train)
 test = normalize(test)
 
 #create cross validation set
-cv = train[-200:]
-train = train[:-200]
+cv = train[-100:]
+train = train[:-100]
 
-print(train.values)
 #Write new csv files
 train.to_csv('../../DataSets/TitanicIntro/train_cleaned.csv')
 cv.to_csv('../../DataSets/TitanicIntro/cv_cleaned.csv')

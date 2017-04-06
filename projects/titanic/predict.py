@@ -4,12 +4,14 @@ import pandas as pd
 import numpy as np
 from matplotlib import pyplot as plt
 
+import sklearn.ensemble
+from sklearn.model_selection import cross_val_score
 
 sys.path.append('../')
 from Network import Network
 
 #Read in that sweet, sweet data
-
+uncleaned_test_data = pd.read_csv('../../DataSets/TitanicIntro/test.csv')
 training_data = pd.read_csv('../../DataSets/TitanicIntro/train_cleaned.csv')
 cv_data = pd.read_csv('../../DataSets/TitanicIntro/cv_cleaned.csv')
 test_data = pd.read_csv('../../DataSets/TitanicIntro/test_cleaned.csv')
@@ -31,19 +33,22 @@ y = training_data[:,-1]
 Xc = cv_data[:,:-1]
 yc = cv_data[:,-1]
 
-tX = test_data[:,:-1]
-ty = test_data[:,:-1]
+tX = test_data
 
 training_data = list(zip(X,y))
 cv_data = list(zip(Xc, yc))
-test_data = list(zip(tX, ty))
 
+forest = sklearn.ensemble.RandomForestClassifier(n_estimators=100, bootstrap=True)
+forest = forest.fit(X, y)
 
+predictions = forest.predict(tX).astype(int)
 
-network = Network([len(X[0]), 25, 10, 1])
-lmbda = 0.667
-eta = 2.6
+#Build the output for submission
+output = uncleaned_test_data['PassengerId'].to_frame()
+output = output.assign(Survived=predictions)
 
-test_accuracy, train_accuracy =  network.SGD(training_data, cv_data, 50, 20, eta, lmbda)
+output.to_csv('prediction.csv', index=False)
+'''
 print("Test: {0}\t|\tTrain: {1}\t|\t(lambda, eta) = ({2},{3})".format(
     test_accuracy, train_accuracy, lmbda, eta))
+'''

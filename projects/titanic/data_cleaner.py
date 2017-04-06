@@ -273,7 +273,6 @@ test = normalize(test)
 
 #create cross validation set
 cv = train[-100:]
-train = train[:-100]
 
 #Write new csv files
 train.to_csv('../../DataSets/TitanicIntro/train_cleaned.csv')

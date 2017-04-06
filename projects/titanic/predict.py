@@ -5,7 +5,8 @@ import numpy as np
 from matplotlib import pyplot as plt
 
 import sklearn.ensemble
-from sklearn.model_selection import cross_val_score
+import sklearn.svm
+from sklearn.model_selection import GridSearchCV
 
 sys.path.append('../')
 from Network import Network
@@ -38,17 +39,28 @@ tX = test_data
 training_data = list(zip(X,y))
 cv_data = list(zip(Xc, yc))
 
+#Support Vector Classifier
+svm = sklearn.svm.SVC()
+C_list = np.logspace(-1, 1, 8)
+g_list = np.logspace(-5, -1, 8)
+params = {'kernel': 'rbf', 'C': C_list, 'gamma': g_list}
+GridSearchCV(svm, params)
+
+svm.fit(X, y)
+print(svm.score(Xc,yc))
+'''
+#RFC classifier
 forest = sklearn.ensemble.RandomForestClassifier(n_estimators=100, bootstrap=True)
 forest = forest.fit(X, y)
 
 predictions = forest.predict(tX).astype(int)
-
+'''
+'''
+print("Test: {0}\t|\tTrain: {1}\t|\t(lambda, eta) = ({2},{3})".format(
+    test_accuracy, train_accuracy, lmbda, eta))
+'''
 #Build the output for submission
 output = uncleaned_test_data['PassengerId'].to_frame()
 output = output.assign(Survived=predictions)
 
 output.to_csv('prediction.csv', index=False)
-'''
-print("Test: {0}\t|\tTrain: {1}\t|\t(lambda, eta) = ({2},{3})".format(
-    test_accuracy, train_accuracy, lmbda, eta))
-'''

@@ -141,13 +141,10 @@ def plot_ages(df):
     plt.show()
 
 def normalize(df):
-    
-    for c in ['Fare', 'Age']:
-        x = df[c]
-        mu = df[c].mean()
-        range = df[c].max() - df[c].min()
-        df[c] = (x - mu)/range
-    return df
+	for c in list(df): 
+		x = df[c]
+		df[c] = x/df[c].max()
+	return df
 
 def visualize_fare_embark(df):
     df.boxplot(['Fare'], by=['Embarked', 'Pclass'])

@@ -41,9 +41,9 @@ cv_data = list(zip(Xc, yc))
 
 #Support Vector Classifier
 svm = sklearn.svm.SVC()
-C_list = np.logspace(-1, 1, 8)
-g_list = np.logspace(-5, -1, 8)
-params = {'kernel': 'rbf', 'C': C_list, 'gamma': g_list}
+C_list = np.logspace(-1, 2, 8)
+g_list = np.logspace(-5, 0, 8)
+params = {'C': C_list, 'gamma': g_list}
 GridSearchCV(svm, params)
 
 svm.fit(X, y)

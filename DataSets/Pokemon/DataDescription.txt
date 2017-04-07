@@ -1,0 +1,4 @@
+The file "moves" outlines the useful moves in the pokemon game. The file "abilities" contains all of the useful abilities in the game.
+
+All files are taken from The Pokemon Showdown github 
+https://github.com/Zarel/Pokemon-Showdown

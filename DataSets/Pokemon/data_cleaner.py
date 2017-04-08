@@ -26,9 +26,41 @@ def load_move_data(path):
 					move_list.append(move)
 	return move_list
 
-moves = load_move_data('moves')
+def load_pokemon_moves(path):
+	pokemon_regex = re.compile('\w+: {learnset')
+	move_regex = re.compile('\w+: \[')
+	poke_moves = dict()
+	with open(path, 'r') as f:
+		lines = f.readlines()
+		move_list = []
+		name = ''
+		for line in lines:
+			name_match = pokemon_regex.match(line)
+			if not name_match:
+				move_match = move_regex.match(line)
+				if move_match:
+					move = move_match.group(0)
+					move_list.append(move[:-3])
+			else:
+				if name != '':
+					poke_moves[name] = move_list
+					move_list = []
+				name = name_match.group(0)
+				name = name[:-11]
 
-print(moves)
-print(len(moves))
-print(len(isZ))
+	return poke_moves
+				
 
+def load_all_moves(path):
+	move_regex = re.compile('\w+: \[')
+	move_list = set()
+	with open(path, 'r') as f:
+			lines = f.readlines()
+			for line in lines:
+				move_match = move_regex.match(line)
+				if move_match:
+					move = move_match.group(0)
+					move_list.add(move[:-3])
+	return move_list
+all_moves = load_all_moves('learnsets')
+print(len(all_moves))
